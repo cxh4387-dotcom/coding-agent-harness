@@ -1,6 +1,7 @@
 import re
 import asyncio
 import sys
+import shutil
 from pathlib import Path
 from harness.models import ToolResult, Feedback, FailureClass
 
@@ -32,6 +33,9 @@ def parse_pytest_output(stdout: str, exit_code: int) -> dict:
 def create_test_runner_handler(workdir: Path, timeout: int = 120):
     async def handler(args: dict) -> ToolResult:
         test_path = args.get("test_path", "")
+        cache_dir = workdir / "__pycache__"
+        if cache_dir.exists():
+            shutil.rmtree(cache_dir, ignore_errors=True)
         cmd = f"{sys.executable} -m pytest {test_path} -v --tb=short 2>&1"
         try:
             proc = await asyncio.create_subprocess_shell(

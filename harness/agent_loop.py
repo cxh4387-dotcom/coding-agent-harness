@@ -1,3 +1,4 @@
+from pathlib import Path
 from harness.models import (
     Action, ToolResult, GuardrailDecision, Feedback,
     LLMResponse, ToolCall, AgentResult, ConversationContext,
@@ -69,6 +70,22 @@ class AgentLoop:
                 if not fence_result.allowed:
                     blocked.append(GuardrailDecision(action=action, rule=None, decision="block"))
                     context.history.append({"role": "system", "content": f"FENCE: {fence_result.reason}"})
+                    continue
+
+                sandbox_blocked = False
+                if action.tool in ("write_file", "read_file"):
+                    file_path = self.sandbox.workdir / action.args.get("path", "")
+                    if not self.sandbox.validate_path(file_path):
+                        blocked.append(GuardrailDecision(action=action, rule=None, decision="block"))
+                        context.history.append({"role": "system", "content": f"SANDBOX: path outside workdir: {action.args.get('path', '')}"})
+                        sandbox_blocked = True
+                elif action.tool == "run_shell":
+                    command = action.args.get("command", "")
+                    if not self.sandbox.validate_command(command):
+                        blocked.append(GuardrailDecision(action=action, rule=None, decision="block"))
+                        context.history.append({"role": "system", "content": f"SANDBOX: command not allowed: {command}"})
+                        sandbox_blocked = True
+                if sandbox_blocked:
                     continue
 
                 result = await self.tools.dispatch(action)
