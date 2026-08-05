@@ -125,6 +125,53 @@
 
 ## 5. 冷启动验证（§4.5）
 
-> **待填充**：冷启动验证将在下一节中执行——派发一个陌生 subagent，仅提供 SPEC.md + PLAN.md，不补充任何对话历史，指定其实现 1-2 个 task。
+### 5.1 验证方法
 
-（冷启动验证结果将在执行后补充到此节）
+- **agent 类型**：general subagent（与主开发 agent 不同，全新 session，无对话历史）
+- **提供材料**：仅 SPEC.md + PLAN.md，不补充任何口头解释
+- **指定 task**：Task 2（数据模型）+ Task 8（危险检测器）
+- **指令**："遇到不确定之处即暂停询问，而非凭猜测继续"
+
+### 5.2 subagent 在哪里暂停并提问
+
+subagent 报告了 4 个不确定点（均未暂停，但记录了疑问）：
+
+1. **Task 1 未完成但 Task 2/8 依赖它**：subagent 发现项目目录只有文档，没有 `harness/__init__.py` 等包结构。它判断这是硬性前置条件而非设计决策，自行创建了最小脚手架。
+   - **暴露的 spec 缺陷**：PLAN.md 未显式标注 Task 1 是所有其他 task 的硬性前置依赖。
+   - **修订**：在 PLAN.md Task 1 标题下添加前置依赖说明。
+
+2. **Python 3.12 不可用**：环境只有 Python 3.13/3.11/3.14(msys2)。subagent 选用 3.13。
+   - **暴露的 spec 缺陷**：SPEC.md 和 PLAN.md 指定 Python 3.12+，但未说明环境兼容性。
+   - **修订**：无需修订 SPEC（3.13 满足 3.12+ 要求），但 PLAN.md 的 Makefile 应使用 `python -m pytest` 而非 `pytest`（后者依赖 PATH）。
+
+3. **pytest 未预装**：subagent 自行安装了 pytest。
+   - **暴露的 spec 缺陷**：PLAN.md 的 Makefile 假设 pytest 已在 PATH 中。
+   - **修订**：PLAN.md Makefile 模板中 `pytest` → `python -m pytest`。
+
+4. **`pip_install_global` 规则与 SPEC 矛盾**：SPEC §9.2 说"pip install 全局 → hitl"，但 PLAN Task 8 的实现匹配 `pip\s+install.*--user`——`--user` 是用户级安装，与"全局"相反。
+   - **暴露的 spec 缺陷**：PLAN.md 代码 bug——规则名 `pip_install_global` 与匹配模式语义不一致。
+   - **修订**：修复匹配模式为 `pip install` 不含 `--user`（即匹配全局安装），并添加 2 个测试覆盖。
+
+### 5.3 subagent 做出的与原意不一致的解读
+
+**无不一致解读**。subagent 严格照搬 PLAN.md 提供的逐字精确代码，未做任何设计偏离。唯一观察到的是 `pip_install_global` 语义问题——subagent 正确识别了这是 bug 但选择"严格照搬 PLAN 而非自行修正"（符合"遇到不确定即暂停询问"的指令）。
+
+### 5.4 产出与预期差距
+
+- **预期**：subagent 实现 Task 2 和 Task 8，测试通过
+- **实际**：subagent 实现了 Task 2（10 测试）和 Task 8（9 测试），全部通过，额外创建了最小脚手架
+- **差距**：subagent 额外创建了脚手架（Task 1 的部分内容），因为 PLAN 未显式标注 Task 1 为前置依赖
+- **总评**：PLAN.md 的代码精确度足够让陌生 agent 无需猜测即可实现，但执行顺序和前置依赖需要更明确
+
+### 5.5 据此对 SPEC / PLAN 的修订
+
+| 修订项 | 修订前 | 修订后 | Commit |
+|--------|--------|--------|--------|
+| Task 1 前置依赖 | 无说明 | 添加"Task 1 是所有其他 task 的硬性前置" | `c93641a` |
+| Makefile pytest 命令 | `pytest tests/` | `python -m pytest tests/` | `c93641a` |
+| pip_install_global 规则 | 匹配 `pip\s+install.*--user`（用户级，与 SPEC 矛盾） | 匹配 `pip install` 不含 `--user`（全局安装，与 SPEC 一致） | `c93641a` |
+| pip_install_global 测试 | 无测试覆盖 | 添加 2 个测试（全局→hitl，--user→不拦截） | `c93641a` |
+
+### 5.6 冷启动验证结论
+
+冷启动验证暴露了 1 个代码 bug（`pip_install_global` 语义矛盾）和 2 个 PLAN 不完整点（前置依赖、Makefile 命令），均已修复。PLAN.md 的代码精确度得到验证——陌生 agent 能严格照搬实现，无需猜测。这证实了 writing-plans 技能的"逐字精确代码"策略有效。
