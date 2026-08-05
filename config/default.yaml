@@ -1,0 +1,29 @@
+llm:
+  base_url: "https://njusehub.info/v1"
+  model: "glm-5.2"
+  temperature: 0.7
+  max_tokens: 4096
+
+scope:
+  allowed_tools:
+    - read_file
+    - write_file
+    - run_shell
+    - run_tests
+  max_iterations: 50
+  max_file_size: 1048576
+  forbidden_patterns:
+    - "rm -rf"
+    - "git push --force"
+    - "curl.*\\|"
+    - "wget.*\\|"
+
+guardrail:
+  custom_rules: []
+
+sandbox:
+  workdir: "./workspace"
+  allowed_paths: []
+
+memory:
+  store_path: "./.harness/memory.json"
