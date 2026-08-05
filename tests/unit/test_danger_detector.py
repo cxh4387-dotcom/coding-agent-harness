@@ -58,3 +58,16 @@ def test_custom_rule():
     decision = detector.check(action)
     assert decision.decision == "block"
     assert decision.rule.name == "no_mkdir"
+
+def test_detect_pip_install_global_hitl():
+    detector = DangerDetector(default_rules())
+    action = Action(tool="run_shell", args={"command": "pip install requests"}, raw="")
+    decision = detector.check(action)
+    assert decision.decision == "hitl"
+    assert decision.rule.name == "pip_install_global"
+
+def test_detect_pip_install_user_not_flagged():
+    detector = DangerDetector(default_rules())
+    action = Action(tool="run_shell", args={"command": "pip install --user requests"}, raw="")
+    decision = detector.check(action)
+    assert decision.decision != "hitl" or decision.rule is None or decision.rule.name != "pip_install_global"

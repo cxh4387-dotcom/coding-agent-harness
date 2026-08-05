@@ -59,8 +59,8 @@ def default_rules() -> list[DangerRule]:
         ),
         DangerRule(
             name="pip_install_global",
-            matcher=lambda a: a.tool == "run_shell" and bool(re.search(r"pip\s+install.*--user", a.args.get("command", ""))),
+            matcher=lambda a: a.tool == "run_shell" and bool(re.search(r"pip\s+install", a.args.get("command", ""))) and not bool(re.search(r"--user", a.args.get("command", ""))),
             severity="hitl",
-            reason="global pip install",
+            reason="global pip install may modify system packages",
         ),
     ]

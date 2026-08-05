@@ -16,7 +16,7 @@
 - All core mechanisms must be testable with MockLLM (no network, no real LLM)
 - No API keys hardcoded, committed, or logged
 - `.gitlab-ci.yml` must contain a job named `unit-test`
-- Test command: `make test` or `pytest tests/ -v`
+- Test command: `make test` or `python -m pytest tests/ -v`
 - Git repo uses `--separate-git-dir` at `C:\Users\Lenovo\.git-repos\final_project`
 
 ---
@@ -126,6 +126,8 @@ Task 22 (integration) ──→ Task 21
 
 ## Task 1: Project Scaffolding
 
+> **前置依赖**：Task 1 是所有其他 task 的硬性前置。任何 task 的测试导入 `from harness.xxx import ...` 都需要 Task 1 创建的包结构。冷启动验证暴露了这一问题（见 SPEC_PROCESS.md §5）。
+
 **Files:**
 - Create: `requirements.txt`
 - Create: `Makefile`
@@ -167,13 +169,13 @@ install:
 	pip install -r requirements.txt
 
 test:
-	pytest tests/ -v --tb=short
+	python -m pytest tests/ -v --tb=short
 
 test-unit:
-	pytest tests/unit/ -v --tb=short
+	python -m pytest tests/unit/ -v --tb=short
 
 test-integration:
-	pytest tests/integration/ -v --tb=short
+	python -m pytest tests/integration/ -v --tb=short
 
 demo:
 	python -m pytest tests/demo/ -v -s
@@ -1279,9 +1281,9 @@ def default_rules() -> list[DangerRule]:
         ),
         DangerRule(
             name="pip_install_global",
-            matcher=lambda a: a.tool == "run_shell" and bool(re.search(r"pip\s+install.*--user", a.args.get("command", ""))),
+            matcher=lambda a: a.tool == "run_shell" and bool(re.search(r"pip\s+install", a.args.get("command", ""))) and not bool(re.search(r"--user", a.args.get("command", ""))),
             severity="hitl",
-            reason="global pip install",
+            reason="global pip install may modify system packages",
         ),
     ]
 ```
