@@ -84,6 +84,7 @@
 | 行为 | 组织上下文 → 调用 LLM → 解析动作 → 护栏检查 → 分发执行 → 反馈校验 → 回灌 → 停机判断 |
 | 输出 | `AgentResult`（执行历史、最终状态、被拦截动作列表） |
 | 边界 | 最大迭代次数由配置限制（默认 50） |
+| 停机条件 | ① LLM 返回 `finish_reason="stop"`（无更多 tool_calls）；② 达到最大迭代次数；③ 所有测试通过且无失败反馈；④ LLM 调用连续失败 3 次；⑤ 不可恢复错误（如 API key 无效） |
 | 错误处理 | LLM 调用失败 → 重试 3 次后停止；工具执行失败 → 记录错误并回灌 |
 
 ### 3.2 模块：LLM 抽象层（`harness/llm/`）
@@ -99,12 +100,12 @@
 
 ### 3.3 模块：工具分发器（`harness/tools/`）
 
-| 工具 | 输入 | 行为 | 输出 | 边界 |
-|---|---|---|---|---|
-| `read_file` | path | 读取文件内容 | `ToolResult(content)` | 沙箱内路径 |
-| `write_file` | path, content | 写入文件 | `ToolResult(success)` | 沙箱内路径，大小限制 |
-| `run_shell` | command | 执行 shell 命令 | `ToolResult(stdout, stderr, exit_code)` | 命令围栏，超时 30s |
-| `run_tests` | test_path | 运行 pytest | `ToolResult(stdout, exit_code, report)` | 沙箱内路径 |
+| 工具 | 输入 | 行为 | 输出 | 边界 | 错误处理 |
+|---|---|---|---|---|---|
+| `read_file` | path | 读取文件内容 | `ToolResult(content)` | 沙箱内路径 | 文件不存在 → ToolResult(success=False, stderr="File not found") |
+| `write_file` | path, content | 写入文件 | `ToolResult(success)` | 沙箱内路径，大小限制 1MB | 路径越界 → ToolResult(success=False)；磁盘满 → 同上 |
+| `run_shell` | command | 执行 shell 命令 | `ToolResult(stdout, stderr, exit_code)` | 命令围栏，超时 30s | 超时 → ToolResult(exit_code=-1, stderr="Timeout")；命令被护栏拦截 → 不执行 |
+| `run_tests` | test_path | 运行 pytest | `ToolResult(stdout, exit_code, report)` | 沙箱内路径 | 测试不存在 → ToolResult(exit_code=1, stderr="No tests found")；超时 120s → 同 run_shell |
 
 ### 3.4 模块：治理/护栏（`harness/guardrail/`）— 重点维度
 
@@ -374,6 +375,33 @@ class HarnessConfig:
     memory: MemoryConfig    # store_path
 ```
 
+### 6.4 实体关系
+
+```
+AgentResult 1──* Action        (一次运行产生多个动作)
+Action       1──1 ToolResult   (每个动作产生一个结果)
+Action       1──1 GuardrailDecision (每个动作有一个护栏决策)
+Action       1──0..1 Feedback  (run_tests 动作产生反馈，其他不产生)
+LLMResponse  1──* ToolCall     (一次 LLM 响应可含多个工具调用)
+ToolCall     1──1 Action       (一个工具调用转换为一个动作)
+Memory       *──* (task)       (记忆通过任务关键词关联)
+```
+
+### 6.5 约束
+
+| 实体 | 字段 | 约束 |
+|---|---|---|
+| Action | tool | ∈ {read_file, write_file, run_shell, run_tests} |
+| Action | args | 必须包含对应工具所需参数（path/content/command/test_path） |
+| GuardrailDecision | decision | ∈ {allow, block, hitl, warn} |
+| Feedback | signal | ∈ {pass, fail} |
+| FailureClass | type | ∈ {assertion, import, timeout, syntax} |
+| LLMResponse | finish_reason | ∈ {stop, tool_calls, length} |
+| ToolResult | exit_code | int; -1 表示超时 |
+| Memory | id | UUID，唯一 |
+| HarnessConfig | max_iterations | > 0，默认 50 |
+| HarnessConfig | max_file_size | > 0，默认 1MB |
+
 ---
 
 ## 7. 凭据与分发设计
@@ -400,6 +428,16 @@ class HarnessConfig:
 ### 7.2 分发设计
 
 **形态**：Docker 镜像
+
+**README 必含章节**（§五.4 要求）：
+1. 项目简介
+2. 安装（获取方式：docker pull 或 git clone）
+3. 运行（docker run 命令）
+4. 分发命令（docker build/push）
+5. 目录结构（项目文件树）
+6. 安全边界说明（凭据存储方案、沙箱边界、护栏规则）
+7. key 在目标机的安全配置方式
+8. 已知限制（平台/架构/依赖前提）
 
 **Dockerfile**：
 ```dockerfile
@@ -428,6 +466,16 @@ docker run -p 8000:8000 -v $(pwd)/workspace:/app/workspace coding-agent-harness
 - 依赖：Docker 20+
 - LLM：需要 OpenAI 兼容 API 的 base_url 和 key
 
+**Docker 镜像推送**：
+- 推送到 GitHub Container Registry (ghcr.io)：`docker push ghcr.io/<user>/coding-agent-harness:latest`
+- CI 中自动构建并推送
+
+**云部署**：
+- 部署平台：Render（免费 Web Service 额度）
+- 部署方式：Render 从 GitHub 拉取仓库，用 Dockerfile 构建，暴露 8000 端口
+- 公网地址：`https://coding-agent-harness.onrender.com`（示例）
+- 环境变量配置：在 Render Dashboard 设置 `HARNESS_API_KEY`（标注明文风险）或挂载 vault volume
+
 ---
 
 ## 8. 技术选型与理由
@@ -438,6 +486,7 @@ docker run -p 8000:8000 -v $(pwd)/workspace:/app/workspace coding-agent-harness
 | **FastAPI** | 原生 async 适合 agent 长循环；自动 OpenAPI 文档；WebSocket 内置支持 |
 | **WebSocket** | 双向通信，适合 HITL 审批（服务器推送请求，客户端推送批准/拒绝） |
 | **原生 HTML/JS** | 无框架依赖，减少构建链复杂度；harness 核心命题不在前端 |
+| **Open Design** | 本项目 WebUI 为纯展示+交互层（动作流、HITL 审批、测试结果），不涉及复杂设计系统。经评估 Open Design 更适合需要完整设计体系的 UI 项目，本项目前端极简（单页 HTML+WebSocket），故豁免使用，在 SPEC 中说明理由（§3.6 条件要求："纯 CLI / 纯后端项目可豁免"，本项目前端为薄包装，同此理） |
 | **OpenAI 兼容 API** | 生态最广；NJUSE Hub 已提供 glm-5.2/deepseek/kimi 等模型 |
 | **pytest** | 成熟的确定性测试框架；JUnit XML 供 CI 解析 |
 | **cryptography (Fernet)** | 对称加密，标准库级别可靠性 |
@@ -526,10 +575,15 @@ docker run -p 8000:8000 -v $(pwd)/workspace:/app/workspace coding-agent-harness
 | WebUI | 能提交任务、实时看到动作流、审批 HITL、查看测试反馈 |
 | 机制演示① | mock LLM 触发 `rm -rf` → 被护栏拦截，确定性可复现 |
 | 机制演示② | mock LLM 写错误代码 → 测试失败 → 反馈回灌 → 修正 → 通过 |
-| 机制演示③ | mock LLM 写 sandbox 外路径 → 被围栏拦截 |
+| 机制演示③ | mock LLM 写 sandbox 外路径 → 被围栏拦截（ScopeFence 属治理维度，与 §A.4-D 重点维度"治理/护栏"对齐） |
 | Docker | `docker build` + `docker run` 可启动 WebUI |
 | CI | `.gitlab-ci.yml` 含 `unit-test` job，push 后自动运行 |
 | 测试 | `make test` 一键运行，全部通过 |
+
+**CI 配置说明**：
+- 需求 §五.6 要求 `.gitlab-ci.yml`（NJU Git 为 GitLab 实例），§4.8 提及 GitHub Actions——本项目以 NJU Git (GitLab) 为主仓库，使用 `.gitlab-ci.yml`；同时镜像到 GitHub 并配置 GitHub Actions 作为备份 CI
+- `.gitlab-ci.yml` 必含 `unit-test` job（§五.6 硬性要求）
+- CI 还须构建 Docker 镜像（§4.8："若选容器分发，CI 还须构建镜像"）
 
 ---
 
