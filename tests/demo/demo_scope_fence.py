@@ -1,5 +1,5 @@
-"""机制演示③: 重点维度(治理)的确定性行为 (§A.6, §A.4-D)
-在 mock LLM 下确定性地复现：agent 试图写 sandbox 外路径 → 被 Sandbox 拦截
+﻿"""鏈哄埗婕旂ず鈶? 閲嶇偣缁村害(娌荤悊)鐨勭‘瀹氭€ц涓?(搂A.6, 搂A.4-D)
+鍦?mock LLM 涓嬬‘瀹氭€у湴澶嶇幇锛歛gent 璇曞浘鍐?sandbox 澶栬矾寰?鈫?琚?Sandbox 鎷︽埅
 """
 import asyncio
 from pathlib import Path
@@ -38,7 +38,8 @@ async def main():
         )
         result = await loop.run("write to system file")
         assert len(result.blocked_actions) >= 1
-        print(f"✓ Demo ③ PASS: write to /etc/passwd was blocked ({len(result.blocked_actions)} blocked)")
+        print(f"鉁?Demo 鈶?PASS: write to /etc/passwd was blocked ({len(result.blocked_actions)} blocked)")
 
 if __name__ == "__main__":
     asyncio.run(main())
+

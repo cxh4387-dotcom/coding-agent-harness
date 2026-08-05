@@ -1,5 +1,5 @@
-"""机制演示①: 治理护栏拦截一个危险动作 (§A.6)
-在 mock LLM 下确定性地复现：agent 试图执行 rm -rf / → 被 DangerDetector 拦截
+﻿"""鏈哄埗婕旂ず鈶? 娌荤悊鎶ゆ爮鎷︽埅涓€涓嵄闄╁姩浣?(搂A.6)
+鍦?mock LLM 涓嬬‘瀹氭€у湴澶嶇幇锛歛gent 璇曞浘鎵ц rm -rf / 鈫?琚?DangerDetector 鎷︽埅
 """
 import asyncio
 from pathlib import Path
@@ -40,7 +40,8 @@ async def main():
         assert len(result.blocked_actions) == 1
         assert result.blocked_actions[0].decision == "block"
         assert result.blocked_actions[0].rule.name == "rm_rf"
-        print("✓ Demo ① PASS: rm -rf / was blocked by DangerDetector")
+        print("鉁?Demo 鈶?PASS: rm -rf / was blocked by DangerDetector")
 
 if __name__ == "__main__":
     asyncio.run(main())
+

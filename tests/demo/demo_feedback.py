@@ -1,5 +1,5 @@
-"""机制演示②: 注入一次失败，反馈闭环使 agent 收到反馈并据此改变下一步动作 (§A.6)
-在 mock LLM 下确定性地复现：agent 写错误代码 → 测试失败 → 反馈回灌 → agent 修正 → 测试通过
+﻿"""鏈哄埗婕旂ず鈶? 娉ㄥ叆涓€娆″け璐ワ紝鍙嶉闂幆浣?agent 鏀跺埌鍙嶉骞舵嵁姝ゆ敼鍙樹笅涓€姝ュ姩浣?(搂A.6)
+鍦?mock LLM 涓嬬‘瀹氭€у湴澶嶇幇锛歛gent 鍐欓敊璇唬鐮?鈫?娴嬭瘯澶辫触 鈫?鍙嶉鍥炵亴 鈫?agent 淇 鈫?娴嬭瘯閫氳繃
 """
 import asyncio
 from pathlib import Path
@@ -54,7 +54,8 @@ async def main():
         assert len(result.feedbacks) >= 1
         assert result.final_feedback is not None
         assert result.final_feedback.signal == "pass"
-        print(f"✓ Demo ② PASS: feedback loop corrected code ({len(result.feedbacks)} feedback rounds, final: pass)")
+        print(f"鉁?Demo 鈶?PASS: feedback loop corrected code ({len(result.feedbacks)} feedback rounds, final: pass)")
 
 if __name__ == "__main__":
     asyncio.run(main())
+
