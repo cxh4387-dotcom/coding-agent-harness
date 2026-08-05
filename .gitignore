@@ -1,6 +1,7 @@
 # Credentials
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 vault.enc
