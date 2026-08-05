@@ -1,6 +1,6 @@
 # Coding Agent Harness Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build a self-coded Coding Agent Harness with governance guardrails as the focus dimension, mockable LLM, Docker distribution, and WebUI.
 
@@ -124,6 +124,42 @@ Task 22 (integration) ──→ Task 21
 
 ---
 
+## Task Completion Status
+
+| Task | Description | Commit | Status |
+|------|-------------|--------|--------|
+| 1 | Project Scaffolding | `5697ae2` | ✅ Done |
+| 2 | Data Models | `04db214` | ✅ Done |
+| 3 | LLM Abstraction Layer | `4fbc6dc` | ✅ Done |
+| 4 | Tool Dispatcher | `86a877d` | ✅ Done |
+| 5 | File Operations Tool | `650decb` | ✅ Done |
+| 6 | Shell Tool | `fcb83c2` | ✅ Done |
+| 7 | Test Runner Tool | `115d635` | ✅ Done |
+| 8 | Danger Detector | `789f15e` | ✅ Done |
+| 9 | HITL State Machine | `41c7b36` | ✅ Done |
+| 10 | Sandbox | `560fc16` | ✅ Done |
+| 11 | Scope Fence | `d71b24c` | ✅ Done |
+| 12 | Feedback Validator | `76b8997` | ✅ Done |
+| 13 | Memory Store | `dab566b` | ✅ Done |
+| 14 | Config Store | `3ac1f94` | ✅ Done |
+| 15 | Credential Manager | `8d43466` | ✅ Done |
+| 16 | Agent Main Loop | `7efd589` | ✅ Done |
+| 17 | WebUI Backend | `d6b9767` | ✅ Done |
+| 18 | WebSocket Handler | `55fe71d` | ✅ Done |
+| 19 | Frontend | `f39056b` | ✅ Done |
+| 20 | Demos + Sandbox Integration | `68abc4b` | ✅ Done |
+| 21 | Docker + README | `9fe5a7f` | ✅ Done |
+| 22 | Integration Tests | `7890c44` | ✅ Done |
+
+**Additional commits:**
+- `fc1ce95` — fix: modernize mock LLM tests to pytest-asyncio
+- `c544c75` — fix: replace unicode checkmark with ASCII in demos for Windows
+- `fa26306` — docs: add AGENT_LOG.md
+
+**Total: 22/22 tasks complete, 93 tests passing (90 unit + 3 integration)**
+
+---
+
 ## Task 1: Project Scaffolding
 
 > **前置依赖**：Task 1 是所有其他 task 的硬性前置。任何 task 的测试导入 `from harness.xxx import ...` 都需要 Task 1 创建的包结构。冷启动验证暴露了这一问题（见 SPEC_PROCESS.md §5）。
@@ -147,7 +183,7 @@ Task 22 (integration) ──→ Task 21
 **Interfaces:**
 - Produces: directory structure and empty `__init__.py` files for all packages
 
-- [ ] **Step 1: Create requirements.txt**
+- [x] **Step 1: Create requirements.txt**
 
 ```txt
 fastapi>=0.115.0
@@ -160,7 +196,7 @@ pytest-asyncio>=0.24.0
 python-dotenv>=1.0.0
 ```
 
-- [ ] **Step 2: Create Makefile**
+- [x] **Step 2: Create Makefile**
 
 ```makefile
 .PHONY: test install lint
@@ -184,7 +220,7 @@ lint:
 	python -m py_compile harness/**/*.py web/**/*.py
 ```
 
-- [ ] **Step 3: Create .gitlab-ci.yml**
+- [x] **Step 3: Create .gitlab-ci.yml**
 
 ```yaml
 stages:
@@ -214,7 +250,7 @@ build-docker:
     - main
 ```
 
-- [ ] **Step 4: Create config/default.yaml**
+- [x] **Step 4: Create config/default.yaml**
 
 ```yaml
 llm:
@@ -248,7 +284,7 @@ memory:
   store_path: "./.harness/memory.json"
 ```
 
-- [ ] **Step 5: Create all __init__.py and conftest.py**
+- [x] **Step 5: Create all __init__.py and conftest.py**
 
 Create empty `__init__.py` in: `harness/`, `harness/llm/`, `harness/tools/`, `harness/guardrail/`, `web/`, `tests/`, `tests/unit/`, `tests/integration/`, `tests/demo/`
 
@@ -261,7 +297,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 ```
 
-- [ ] **Step 6: Verify structure and commit**
+- [x] **Step 6: Verify structure and commit**
 
 ```bash
 python -c "import harness; import web; print('imports OK')"
@@ -281,7 +317,7 @@ git commit -m "chore: project scaffolding (requirements, Makefile, CI, config, p
 **Interfaces:**
 - Produces: `Action`, `ToolResult`, `GuardrailDecision`, `Feedback`, `FailureClass`, `LLMResponse`, `ToolCall`, `AgentResult`, `ConversationContext` — all dataclasses used by every subsequent task
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_models.py
@@ -340,14 +376,14 @@ def test_fence_result():
     assert not fr.allowed
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_models.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError: No module named 'harness.models'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/models.py
@@ -427,14 +463,14 @@ class FenceResult:
     reason: str = ""
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_models.py -v
 ```
 Expected: PASS — all 10 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/models.py tests/unit/test_models.py
@@ -457,7 +493,7 @@ git commit -m "feat: add data models (Action, ToolResult, GuardrailDecision, etc
 - Consumes: `ConversationContext`, `LLMResponse`, `ToolCall` from Task 2
 - Produces: `LLMInterface` (ABC), `MockLLM`, `OpenAICompatibleLLM`
 
-- [ ] **Step 1: Write failing tests for LLMInterface and MockLLM**
+- [x] **Step 1: Write failing tests for LLMInterface and MockLLM**
 
 ```python
 # tests/unit/test_llm_interface.py
@@ -522,14 +558,14 @@ def test_mock_records_call_count():
     assert mock.call_count == 2
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 pytest tests/unit/test_llm_interface.py tests/unit/test_mock_llm.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write LLMInterface and MockLLM**
+- [x] **Step 3: Write LLMInterface and MockLLM**
 
 ```python
 # harness/llm/interface.py
@@ -564,14 +600,14 @@ class MockLLM(LLMInterface):
         return resp
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 pytest tests/unit/test_llm_interface.py tests/unit/test_mock_llm.py -v
 ```
 Expected: PASS
 
-- [ ] **Step 5: Write failing test for OpenAICompatibleLLM**
+- [x] **Step 5: Write failing test for OpenAICompatibleLLM**
 
 ```python
 # tests/unit/test_openai_compat.py
@@ -625,14 +661,14 @@ async def test_openai_compat_no_tool_calls():
         assert result.content == "Done!"
 ```
 
-- [ ] **Step 6: Run test to verify it fails**
+- [x] **Step 6: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_openai_compat.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 7: Write OpenAICompatibleLLM**
+- [x] **Step 7: Write OpenAICompatibleLLM**
 
 ```python
 # harness/llm/openai_compat.py
@@ -687,14 +723,14 @@ class OpenAICompatibleLLM(LLMInterface):
         )
 ```
 
-- [ ] **Step 8: Run tests to verify they pass**
+- [x] **Step 8: Run tests to verify they pass**
 
 ```bash
 pytest tests/unit/test_openai_compat.py -v
 ```
 Expected: PASS
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add harness/llm/ tests/unit/test_llm_interface.py tests/unit/test_mock_llm.py tests/unit/test_openai_compat.py
@@ -713,7 +749,7 @@ git commit -m "feat: add LLM abstraction layer (interface, mock, openai-compatib
 - Consumes: `Action`, `ToolResult` from Task 2
 - Produces: `ToolDispatcher` with `register(tool, handler)` and `dispatch(action)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_tool_dispatcher.py
@@ -752,14 +788,14 @@ async def test_dispatch_handler_exception_caught():
     assert "boom" in result.stderr
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_tool_dispatcher.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/tools/dispatcher.py
@@ -783,14 +819,14 @@ class ToolDispatcher:
             return ToolResult(success=False, stderr=f"{e}\n{traceback.format_exc()}")
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_tool_dispatcher.py -v
 ```
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/tools/dispatcher.py tests/unit/test_tool_dispatcher.py
@@ -809,7 +845,7 @@ git commit -m "feat: add tool dispatcher with handler registration"
 - Consumes: `ToolResult` from Task 2
 - Produces: `create_read_file_handler(workdir)` and `create_write_file_handler(workdir)` — factory functions returning async handlers for ToolDispatcher
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_file_ops.py
@@ -853,14 +889,14 @@ async def test_write_file_too_large():
         assert "size" in result.stderr.lower() or "too large" in result.stderr.lower()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_file_ops.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/tools/file_ops.py
@@ -887,14 +923,14 @@ def create_write_file_handler(workdir: Path, max_size: int = 1048576):
     return handler
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_file_ops.py -v
 ```
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/tools/file_ops.py tests/unit/test_file_ops.py
@@ -913,7 +949,7 @@ git commit -m "feat: add file operations tool (read_file, write_file)"
 - Consumes: `ToolResult` from Task 2
 - Produces: `create_shell_handler(timeout=30)` — factory returning async handler
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_shell.py
@@ -946,14 +982,14 @@ async def test_shell_timeout():
     assert "timeout" in result.stderr.lower() or result.exit_code == -1
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_shell.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/tools/shell.py
@@ -981,14 +1017,14 @@ def create_shell_handler(timeout: int = 30):
     return handler
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_shell.py -v
 ```
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/tools/shell.py tests/unit/test_shell.py
@@ -1007,7 +1043,7 @@ git commit -m "feat: add shell execution tool with timeout"
 - Consumes: `ToolResult` from Task 2
 - Produces: `create_test_runner_handler(workdir, timeout=120)` — factory returning async handler that runs pytest and parses output
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_test_runner.py
@@ -1051,14 +1087,14 @@ async def test_test_runner_handler():
         assert result.exit_code == 0
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_test_runner.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/tools/test_runner.py
@@ -1117,14 +1153,14 @@ def create_test_runner_handler(workdir: Path, timeout: int = 120):
     return handler
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_test_runner.py -v
 ```
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/tools/test_runner.py tests/unit/test_test_runner.py
@@ -1143,7 +1179,7 @@ git commit -m "feat: add test runner tool with pytest output parsing"
 - Consumes: `Action`, `DangerRule`, `GuardrailDecision` from Task 2
 - Produces: `DangerDetector`, `default_rules()` — rules engine for dangerous action detection
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_danger_detector.py
@@ -1209,14 +1245,14 @@ def test_custom_rule():
     assert decision.rule.name == "no_mkdir"
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_danger_detector.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/guardrail/danger_detector.py
@@ -1288,14 +1324,14 @@ def default_rules() -> list[DangerRule]:
     ]
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_danger_detector.py -v
 ```
 Expected: PASS — all 9 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/guardrail/danger_detector.py tests/unit/test_danger_detector.py
@@ -1314,7 +1350,7 @@ git commit -m "feat: add danger detector with default rules (rm -rf, git push --
 - Consumes: `Action`, `GuardrailDecision` from Task 2
 - Produces: `HITLStateMachine` with states: Idle, Running, AwaitingApproval, Approved, Denied, Stopped
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_hitl_state_machine.py
@@ -1395,14 +1431,14 @@ def test_pending_action_stored():
     assert sm.pending_action.args["command"] == "rm test"
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_hitl_state_machine.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/guardrail/hitl_state_machine.py
@@ -1450,14 +1486,14 @@ class HITLStateMachine:
         return self.state == HITLState.APPROVED
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_hitl_state_machine.py -v
 ```
 Expected: PASS — all 9 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/guardrail/hitl_state_machine.py tests/unit/test_hitl_state_machine.py
@@ -1476,7 +1512,7 @@ git commit -m "feat: add HITL state machine (Idle→Running→AwaitingApproval�
 - Consumes: `Action` from Task 2
 - Produces: `Sandbox` with `validate_path(path)` and `validate_command(command)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_sandbox.py
@@ -1513,14 +1549,14 @@ def test_validate_command_absolute_path():
     assert sb.validate_command("cat /etc/passwd") is False
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_sandbox.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/guardrail/sandbox.py
@@ -1557,14 +1593,14 @@ class Sandbox:
         return None
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_sandbox.py -v
 ```
 Expected: PASS — all 7 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/guardrail/sandbox.py tests/unit/test_sandbox.py
@@ -1583,7 +1619,7 @@ git commit -m "feat: add sandbox with path and command validation"
 - Consumes: `Action`, `FenceResult` from Task 2
 - Produces: `ScopeFence` with `enforce(action, iteration)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_scope_fence.py
@@ -1632,14 +1668,14 @@ def test_block_file_too_large():
     assert "size" in result.reason.lower() or "large" in result.reason.lower()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_scope_fence.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/guardrail/scope_fence.py
@@ -1674,14 +1710,14 @@ class ScopeFence:
         return FenceResult(allowed=True)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_scope_fence.py -v
 ```
 Expected: PASS — all 5 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/guardrail/scope_fence.py tests/unit/test_scope_fence.py
@@ -1700,7 +1736,7 @@ git commit -m "feat: add scope fence (tool whitelist, iteration limit, forbidden
 - Consumes: `Action`, `ToolResult`, `Feedback`, `FailureClass` from Task 2; `parse_pytest_output` from Task 7
 - Produces: `FeedbackValidator` with `validate(action, result)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_feedback_validator.py
@@ -1743,14 +1779,14 @@ def test_validate_syntax_error():
     assert any(f.type == "syntax" for f in feedback.failures)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_feedback_validator.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/feedback.py
@@ -1779,14 +1815,14 @@ class FeedbackValidator:
         )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_feedback_validator.py -v
 ```
 Expected: PASS — all 4 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/feedback.py tests/unit/test_feedback_validator.py
@@ -1805,7 +1841,7 @@ git commit -m "feat: add feedback validator with test result parsing and failure
 - Consumes: `ConversationContext` from Task 2
 - Produces: `MemoryStore` with `save_decision()`, `build_context()`, `retrieve_relevant()`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_memory_store.py
@@ -1847,14 +1883,14 @@ def test_persistence():
         assert len(results) == 1
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_memory_store.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/memory.py
@@ -1907,14 +1943,14 @@ class MemoryStore:
         )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_memory_store.py -v
 ```
 Expected: PASS — all 4 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/memory.py tests/unit/test_memory_store.py
@@ -1933,7 +1969,7 @@ git commit -m "feat: add memory store with JSON persistence and keyword retrieva
 - Consumes: YAML config file
 - Produces: `ConfigStore` with `from_yaml(path)`, `HarnessConfig`, `ScopeConfig`, `SandboxConfig`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_config_store.py
@@ -1976,14 +2012,14 @@ memory:
     assert config.scope.max_file_size == 1024
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_config_store.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/config.py
@@ -2040,14 +2076,14 @@ class ConfigStore:
         )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_config_store.py -v
 ```
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/config.py tests/unit/test_config_store.py
@@ -2066,7 +2102,7 @@ git commit -m "feat: add config store with YAML loading"
 - Consumes: `cryptography.fernet.Fernet`
 - Produces: `CredentialManager` with `store_key()`, `get_key()`, `delete_key()`, `has_key()`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_credential_manager.py
@@ -2113,14 +2149,14 @@ def test_different_machine_cannot_decrypt():
         assert cm2.get_key() is None or cm2.get_key() != "sk-test-key-12345"
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_credential_manager.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/credentials.py
@@ -2176,14 +2212,14 @@ class CredentialManager:
             self.vault_path.unlink()
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_credential_manager.py -v
 ```
 Expected: PASS — all 5 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/credentials.py tests/unit/test_credential_manager.py
@@ -2202,7 +2238,7 @@ git commit -m "feat: add credential manager with Fernet encryption"
 - Consumes: `LLMInterface` (Task 3), `ToolDispatcher` (Task 4), `DangerDetector` (Task 8), `HITLStateMachine` (Task 9), `Sandbox` (Task 10), `ScopeFence` (Task 11), `FeedbackValidator` (Task 12), `MemoryStore` (Task 13)
 - Produces: `AgentLoop` with `run(task)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_agent_loop.py
@@ -2305,14 +2341,14 @@ async def test_agent_loop_max_iterations():
         assert result.iterations <= 4
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_agent_loop.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # harness/agent_loop.py
@@ -2412,14 +2448,14 @@ class AgentLoop:
         )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_agent_loop.py -v
 ```
 Expected: PASS — all 3 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add harness/agent_loop.py tests/unit/test_agent_loop.py
@@ -2439,7 +2475,7 @@ git commit -m "feat: add agent main loop (context→LLM→parse→guardrail→di
 - Consumes: `AgentLoop` (Task 16), `CredentialManager` (Task 15), `ConfigStore` (Task 14)
 - Produces: FastAPI app with REST endpoints for tasks, config, credentials
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_api.py
@@ -2491,14 +2527,14 @@ def test_store_and_delete_credential():
     assert resp.json()["has_key"] is False
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_api.py -v
 ```
 Expected: FAIL — `ModuleNotFoundError`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # web/app.py
@@ -2584,14 +2620,14 @@ def create_router() -> APIRouter:
     return router
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_api.py -v
 ```
 Expected: PASS — all 5 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/app.py web/api.py tests/unit/test_api.py
@@ -2611,7 +2647,7 @@ git commit -m "feat: add FastAPI web backend with REST API (tasks, credentials, 
 - Consumes: `AgentLoop` (Task 16)
 - Produces: WebSocket endpoint `/ws/tasks/{task_id}` for real-time action streaming
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/unit/test_ws.py
@@ -2637,14 +2673,14 @@ def test_websocket_receives_action_messages():
         assert msg["type"] in ("connected", "action", "hitl_request", "feedback", "done")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 pytest tests/unit/test_ws.py -v
 ```
 Expected: FAIL — no WebSocket route
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 # web/ws.py
@@ -2707,14 +2743,14 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
         ws_manager.disconnect(task_id)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 pytest tests/unit/test_ws.py -v
 ```
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/ws.py web/app.py tests/unit/test_ws.py
@@ -2734,7 +2770,7 @@ git commit -m "feat: add WebSocket handler for real-time action streaming"
 - Consumes: REST API (Task 17) + WebSocket (Task 18)
 - Produces: Single-page WebUI with task input, action stream, HITL approval, test feedback
 
-- [ ] **Step 1: Create index.html**
+- [x] **Step 1: Create index.html**
 
 ```html
 <!-- web/static/index.html -->
@@ -2780,7 +2816,7 @@ git commit -m "feat: add WebSocket handler for real-time action streaming"
 </html>
 ```
 
-- [ ] **Step 2: Create app.js**
+- [x] **Step 2: Create app.js**
 
 ```javascript
 // web/static/app.js
@@ -2866,7 +2902,7 @@ document.getElementById('delete-key').onclick = async () => {
 loadCredStatus();
 ```
 
-- [ ] **Step 3: Create style.css**
+- [x] **Step 3: Create style.css**
 
 ```css
 /* web/static/style.css */
@@ -2883,7 +2919,7 @@ button { padding: 8px 16px; cursor: pointer; margin: 5px 5px 5px 0; }
 #feedback-panel { border-color: #2ecc71; }
 ```
 
-- [ ] **Step 4: Add root route to app.py**
+- [x] **Step 4: Add root route to app.py**
 
 Add to `web/app.py`:
 ```python
@@ -2894,7 +2930,7 @@ async def index():
     return FileResponse(str(Path(__file__).parent / "static" / "index.html"))
 ```
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 ```bash
 python -c "from web.app import create_app; app = create_app(workdir=Path('.')); print('app OK')"
@@ -2915,7 +2951,7 @@ git commit -m "feat: add WebUI frontend (task input, action stream, HITL, feedba
 - Consumes: `AgentLoop` (Task 16), `MockLLM` (Task 3), all guardrail components
 - Produces: 3 deterministic demos runnable with `make demo`
 
-- [ ] **Step 1: Write demo_guardrail.py (① 护栏拦截危险动作)**
+- [x] **Step 1: Write demo_guardrail.py (① 护栏拦截危险动作)**
 
 ```python
 # tests/demo/demo_guardrail.py
@@ -2967,7 +3003,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-- [ ] **Step 2: Write demo_feedback.py (② 反馈闭环)**
+- [x] **Step 2: Write demo_feedback.py (② 反馈闭环)**
 
 ```python
 # tests/demo/demo_feedback.py
@@ -3034,7 +3070,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-- [ ] **Step 3: Write demo_scope_fence.py (③ 范围围栏)**
+- [x] **Step 3: Write demo_scope_fence.py (③ 范围围栏)**
 
 ```python
 # tests/demo/demo_scope_fence.py
@@ -3084,7 +3120,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-- [ ] **Step 4: Run demos to verify**
+- [x] **Step 4: Run demos to verify**
 
 ```bash
 python tests/demo/demo_guardrail.py
@@ -3093,7 +3129,7 @@ python tests/demo/demo_scope_fence.py
 ```
 Expected: All 3 print "✓ Demo ... PASS"
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/demo/
@@ -3109,7 +3145,7 @@ git commit -m "feat: add 3 mechanism demos (guardrail, feedback, scope fence)"
 - Modify: `.gitlab-ci.yml` (already created in Task 1, verify)
 - Create: `README.md`
 
-- [ ] **Step 1: Create Dockerfile**
+- [x] **Step 1: Create Dockerfile**
 
 ```dockerfile
 FROM python:3.12-slim
@@ -3123,7 +3159,7 @@ ENV PYTHONUNBUFFERED=1
 CMD ["uvicorn", "web.app:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-- [ ] **Step 2: Create README.md**
+- [x] **Step 2: Create README.md**
 
 ```markdown
 # Coding Agent Harness
@@ -3183,7 +3219,7 @@ docker push ghcr.io/<user>/coding-agent-harness:latest
 - 测试框架: 仅支持 pytest
 ```
 
-- [ ] **Step 3: Verify Docker build**
+- [x] **Step 3: Verify Docker build**
 
 ```bash
 docker build -t coding-agent-harness .
@@ -3192,14 +3228,14 @@ curl http://localhost:8000/api/health
 docker stop $(docker ps -q --filter ancestor=coding-agent-harness)
 ```
 
-- [ ] **Step 4: Run full test suite**
+- [x] **Step 4: Run full test suite**
 
 ```bash
 make test
 ```
 Expected: All tests pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add Dockerfile README.md
@@ -3218,7 +3254,7 @@ git commit -m "feat: add Dockerfile and README"
 - Consumes: All harness components
 - Produces: Integration tests verifying multi-component collaboration
 
-- [ ] **Step 1: Write test_guardrail_to_hitl.py**
+- [x] **Step 1: Write test_guardrail_to_hitl.py**
 
 ```python
 # tests/integration/test_guardrail_to_hitl.py
@@ -3262,7 +3298,7 @@ def test_guardrail_to_hitl_deny():
     assert sm.state == HITLState.RUNNING
 ```
 
-- [ ] **Step 2: Write test_feedback_to_loop.py**
+- [x] **Step 2: Write test_feedback_to_loop.py**
 
 ```python
 # tests/integration/test_feedback_to_loop.py
@@ -3289,14 +3325,14 @@ def test_feedback_updates_context():
     assert any("Tests failed" in m["content"] for m in context.history)
 ```
 
-- [ ] **Step 3: Run integration tests**
+- [x] **Step 3: Run integration tests**
 
 ```bash
 make test-integration
 ```
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/integration/

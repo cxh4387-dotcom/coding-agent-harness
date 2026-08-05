@@ -70,3 +70,29 @@ coding-agent-harness/
 - 依赖: Docker 20+, Python 3.12+
 - LLM: 需要 OpenAI 兼容 API
 - 测试框架: 仅支持 pytest
+
+## 部署架构与 CI/CD
+
+### 部署架构
+
+- 平台: Render (免费 Web Service 额度)
+- 方式: Render 从 Git 仓库拉取，用 Dockerfile 构建，暴露 8000 端口
+- 公网地址: `https://coding-agent-harness.onrender.com`（示例）
+- 环境变量: 在 Render Dashboard 设置 `HARNESS_API_KEY`
+
+### CI/CD
+
+- CI 配置: `.gitlab-ci.yml`（NJU Git / GitLab）
+- CI 流程:
+  1. `unit-test` job: Python 3.12-slim 镜像，运行 `pytest tests/unit/`，产出 JUnit XML 报告
+  2. `build-docker` job: Docker 镜像构建（仅 main 分支触发）
+- 每次 push 自动运行测试，确保代码质量
+
+### 第三方依赖
+
+- [FastAPI](https://fastapi.tiangolo.com/) (MIT) — Web 框架
+- [uvicorn](https://www.uvicorn.org/) (BSD-3-Clause) — ASGI 服务器
+- [httpx](https://www.python-httpx.org/) (BSD-3-Clause) — HTTP 客户端
+- [cryptography](https://cryptography.io/) (Apache-2.0/BSD-3-Clause) — 加密库
+- [PyYAML](https://pyyaml.org/) (MIT) — YAML 解析
+- [pytest](https://pytest.org/) (MIT) — 测试框架
