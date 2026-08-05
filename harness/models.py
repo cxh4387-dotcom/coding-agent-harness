@@ -72,3 +72,12 @@ class ConversationContext:
 class FenceResult:
     allowed: bool
     reason: str = ""
+
+@dataclass
+class Memory:
+    id: str
+    task: str
+    decision: str
+    rationale: str
+    timestamp: str
+    tags: list[str]
