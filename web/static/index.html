@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Agent Harness</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header><h1>Coding Agent Harness</h1></header>
+    <main>
+        <section id="task-input">
+            <textarea id="task-text" placeholder="输入编码任务..."></textarea>
+            <button id="submit-btn">提交任务</button>
+        </section>
+        <section id="action-stream">
+            <h2>Agent 动作流</h2>
+            <div id="actions"></div>
+        </section>
+        <section id="hitl-panel" class="hidden">
+            <h2>审批请求</h2>
+            <div id="hitl-action"></div>
+            <button id="approve-btn">批准</button>
+            <button id="deny-btn">拒绝</button>
+        </section>
+        <section id="feedback-panel">
+            <h2>测试反馈</h2>
+            <div id="feedback"></div>
+        </section>
+        <section id="credential-panel">
+            <h2>API Key</h2>
+            <span id="cred-status">未设置</span>
+            <input type="password" id="api-key" placeholder="输入 API Key">
+            <button id="save-key">保存</button>
+            <button id="delete-key">清除</button>
+        </section>
+    </main>
+    <script src="/static/app.js"></script>
+</body>
+</html>
