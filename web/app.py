@@ -39,3 +39,7 @@ def create_app(workdir: Path, config_path: Path | None = None) -> FastAPI:
         return FileResponse(str(Path(__file__).parent / "static" / "index.html"))
 
     return app
+
+
+app = create_app(workdir=Path("/app/workspace"))
+
