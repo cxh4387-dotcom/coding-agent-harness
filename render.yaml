@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: coding-agent-harness
+    env: docker
+    plan: free
+    port: 8000
+    healthCheckPath: /
+    envVars:
+      - key: HARNESS_API_KEY
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
