@@ -77,7 +77,7 @@ coding-agent-harness/
 
 - 平台: Render (免费 Web Service 额度)
 - 方式: Render 从 Git 仓库拉取，用 Dockerfile 构建，暴露 8000 端口
-- 公网地址: `https://coding-agent-harness.onrender.com`（示例）
+- 公网地址: `https://coding-agent-harness-7kwv.onrender.com`
 - 环境变量: 在 Render Dashboard 设置 `HARNESS_API_KEY`
 
 ### CI/CD
